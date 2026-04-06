@@ -85,6 +85,10 @@ uv sync --dev
 uv run ya-yandex-wiki-mcp
 ```
 
+## Contributing
+
+Before creating a commit or opening a merge request, run the full local verification set from [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Tests
 
 ```bash

@@ -82,6 +82,10 @@ uv sync --dev
 uv run ya-yandex-wiki-mcp
 ```
 
+## Разработка
+
+Перед коммитом и перед созданием или обновлением merge request нужно прогонять полный локальный набор проверок из [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Тесты
 
 ```bash
