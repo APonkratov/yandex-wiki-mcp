@@ -9,6 +9,9 @@ from starlette.requests import Request
 from mcp_wiki.mcp.context import AppContext
 from mcp_wiki.mcp.params import (
     Cursor,
+    GridFields,
+    GridID,
+    GridPageSize,
     PageFields,
     PageID,
     PageSize,
@@ -204,6 +207,91 @@ def register_page_read_tools(mcp: FastMCP[Any]) -> None:
             cursor=cursor,
             order_by=order_by,
             order_direction=order_direction,
+            auth=get_yandex_auth(ctx),
+        )
+
+    @mcp.tool(
+        title="Get Page Grids",
+        description="Get dynamic tables attached to a Yandex Wiki page.",
+        annotations=ToolAnnotations(readOnlyHint=True),
+    )
+    async def page_get_grids(
+        ctx: Context[Any, AppContext, Request],
+        page_id: Annotated[
+            PageID | None,
+            Field(description="Wiki page numeric ID. Provide either page_id or slug."),
+        ] = None,
+        slug: Annotated[
+            PageSlug | None,
+            Field(
+                description="Wiki page slug or full Wiki URL. Provide either page_id or slug."
+            ),
+        ] = None,
+        page_size: GridPageSize = 50,
+        cursor: Cursor = None,
+        order_by: Annotated[
+            Literal["title", "created_at"] | None,
+            Field(description="Optional grid sorting field."),
+        ] = None,
+        order_direction: Annotated[
+            Literal["asc", "desc"] | None,
+            Field(description="Optional grid sorting direction."),
+        ] = None,
+    ) -> Any:
+        resolved_page_id = await _resolve_page_id(ctx, page_id=page_id, slug=slug)
+        return await ctx.request_context.lifespan_context.wiki.page_get_grids(
+            resolved_page_id,
+            page_size=page_size,
+            cursor=cursor,
+            order_by=order_by,
+            order_direction=order_direction,
+            auth=get_yandex_auth(ctx),
+        )
+
+    @mcp.tool(
+        title="Get Wiki Grid",
+        description="Get a Yandex Wiki dynamic table by grid ID.",
+        annotations=ToolAnnotations(readOnlyHint=True),
+    )
+    async def grid_get(
+        ctx: Context[Any, AppContext, Request],
+        grid_id: GridID,
+        fields: GridFields = None,
+        filter: Annotated[
+            str | None,
+            Field(description="Optional row filter expression for the grid."),
+        ] = None,
+        only_cols: Annotated[
+            str | None,
+            Field(
+                description="Optional comma-separated list of column slugs to return."
+            ),
+        ] = None,
+        only_rows: Annotated[
+            str | None,
+            Field(description="Optional comma-separated list of row IDs to return."),
+        ] = None,
+        revision: Annotated[
+            str | None,
+            Field(description="Optional grid revision for historical reads."),
+        ] = None,
+        sort: Annotated[
+            str | None,
+            Field(description="Optional sort expression for grid rows."),
+        ] = None,
+    ) -> Any:
+        grid_id = grid_id.strip()
+        if not grid_id:
+            raise ValueError("grid_id must not be empty.")
+
+        return await ctx.request_context.lifespan_context.wiki.grid_get(
+            grid_id,
+            fields=[field.value for field in fields] if fields else None,
+            filter=filter,
+            only_cols=only_cols,
+            only_rows=only_rows,
+            revision=revision,
+            sort=sort,
             auth=get_yandex_auth(ctx),
         )
 

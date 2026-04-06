@@ -22,7 +22,8 @@
         "WIKI_TOKEN": "${user_config.wiki_token}",
         "WIKI_IAM_TOKEN": "${user_config.wiki_iam_token}",
         "WIKI_CLOUD_ORG_ID": "${user_config.wiki_cloud_org_id}",
-        "WIKI_ORG_ID": "${user_config.wiki_org_id}"
+        "WIKI_ORG_ID": "${user_config.wiki_org_id}",
+        "WIKI_READ_ONLY": "${user_config.wiki_read_only}"
       }
     }
   },
@@ -33,6 +34,14 @@
     }
   },
   "tools": [
+    {
+      "name": "page_get_grids",
+      "description": "Get dynamic tables attached to a Yandex Wiki page"
+    },
+    {
+      "name": "grid_get",
+      "description": "Get a Yandex Wiki dynamic table by grid ID"
+    },
     {
       "name": "page_get",
       "description": "Get a Yandex Wiki page by page_id or slug"
@@ -52,6 +61,50 @@
     {
       "name": "page_get_attachments",
       "description": "Get attachments for a Yandex Wiki page"
+    },
+    {
+      "name": "grid_create",
+      "description": "Create a Yandex Wiki dynamic table on a page"
+    },
+    {
+      "name": "grid_update",
+      "description": "Update a Yandex Wiki dynamic table"
+    },
+    {
+      "name": "grid_delete",
+      "description": "Delete a Yandex Wiki dynamic table"
+    },
+    {
+      "name": "grid_copy",
+      "description": "Copy a Yandex Wiki dynamic table to an existing target page"
+    },
+    {
+      "name": "grid_add_rows",
+      "description": "Add rows to a Yandex Wiki dynamic table"
+    },
+    {
+      "name": "grid_delete_rows",
+      "description": "Delete rows from a Yandex Wiki dynamic table"
+    },
+    {
+      "name": "grid_update_cells",
+      "description": "Update cells in a Yandex Wiki dynamic table"
+    },
+    {
+      "name": "grid_add_columns",
+      "description": "Add columns to a Yandex Wiki dynamic table"
+    },
+    {
+      "name": "grid_delete_columns",
+      "description": "Delete columns from a Yandex Wiki dynamic table"
+    },
+    {
+      "name": "grid_move_rows",
+      "description": "Move a row inside a Yandex Wiki dynamic table"
+    },
+    {
+      "name": "grid_move_columns",
+      "description": "Move a column inside a Yandex Wiki dynamic table"
     },
     {
       "name": "page_create",
@@ -114,6 +167,14 @@
       "required": false,
       "sensitive": false,
       "default": ""
+    },
+    "wiki_read_only": {
+      "type": "boolean",
+      "title": "Wiki Read Only",
+      "description": "Disable all non-read MCP tools and request only read access when OAuth scopes are used",
+      "required": false,
+      "sensitive": false,
+      "default": false
     }
   },
   "keywords": [

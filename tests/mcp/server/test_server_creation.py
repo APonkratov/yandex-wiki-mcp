@@ -6,10 +6,23 @@ READ_ONLY_TOOL_NAMES = [
     "page_get_descendants",
     "page_get_comments",
     "page_get_resources",
+    "page_get_grids",
+    "grid_get",
     "page_get_attachments",
 ]
 
-WRITE_TOOL_NAMES = [
+NON_READ_TOOL_NAMES = [
+    "grid_create",
+    "grid_update",
+    "grid_add_rows",
+    "grid_delete",
+    "grid_copy",
+    "grid_update_cells",
+    "grid_delete_rows",
+    "grid_add_columns",
+    "grid_delete_columns",
+    "grid_move_rows",
+    "grid_move_columns",
     "page_create",
     "page_update",
     "page_append_content",
@@ -19,7 +32,7 @@ WRITE_TOOL_NAMES = [
     "page_upload_attachment",
 ]
 
-EXPECTED_TOOL_NAMES = READ_ONLY_TOOL_NAMES + WRITE_TOOL_NAMES
+EXPECTED_TOOL_NAMES = READ_ONLY_TOOL_NAMES + NON_READ_TOOL_NAMES
 
 
 class TestToolRegistration:
@@ -45,8 +58,8 @@ class TestReadOnlyModeToolRegistration:
         tool_names = [tool.name for tool in result.tools]
         assert tool_name in tool_names
 
-    @pytest.mark.parametrize("tool_name", WRITE_TOOL_NAMES)
-    async def test_write_tools_are_not_registered(
+    @pytest.mark.parametrize("tool_name", NON_READ_TOOL_NAMES)
+    async def test_non_read_tools_are_not_registered(
         self,
         client_session_read_only: ClientSession,
         tool_name: str,
