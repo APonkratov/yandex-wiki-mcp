@@ -154,7 +154,9 @@ class TestPageReadTools:
         mock_wiki_protocol.page_get_by_slug.assert_awaited_once()
         mock_wiki_protocol.page_get_grids.assert_awaited_once()
         assert mock_wiki_protocol.page_get_grids.await_args.args == (10,)
-        assert mock_wiki_protocol.page_get_grids.await_args.kwargs["order_by"] == "title"
+        assert (
+            mock_wiki_protocol.page_get_grids.await_args.kwargs["order_by"] == "title"
+        )
         assert (
             mock_wiki_protocol.page_get_grids.await_args.kwargs["order_direction"]
             == "asc"
@@ -194,9 +196,15 @@ class TestPageReadTools:
             "attributes",
             "user_permissions",
         ]
-        assert mock_wiki_protocol.grid_get.await_args.kwargs["filter"] == "[status] = done"
-        assert mock_wiki_protocol.grid_get.await_args.kwargs["only_cols"] == "status,eta"
-        assert mock_wiki_protocol.grid_get.await_args.kwargs["only_rows"] == "row-1,row-2"
+        assert (
+            mock_wiki_protocol.grid_get.await_args.kwargs["filter"] == "[status] = done"
+        )
+        assert (
+            mock_wiki_protocol.grid_get.await_args.kwargs["only_cols"] == "status,eta"
+        )
+        assert (
+            mock_wiki_protocol.grid_get.await_args.kwargs["only_rows"] == "row-1,row-2"
+        )
         assert mock_wiki_protocol.grid_get.await_args.kwargs["revision"] == "7"
         assert mock_wiki_protocol.grid_get.await_args.kwargs["sort"] == "eta"
         assert "auth" in mock_wiki_protocol.grid_get.await_args.kwargs

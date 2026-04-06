@@ -86,9 +86,7 @@ class TestWikiClient:
                 "title": "Roadmap",
                 "revision": "7",
                 "structure": {
-                    "columns": [
-                        {"id": "col-1", "slug": "status", "title": "Status"}
-                    ]
+                    "columns": [{"id": "col-1", "slug": "status", "title": "Status"}]
                 },
                 "rows": [{"id": "row-1", "row": ["done"]}],
             }

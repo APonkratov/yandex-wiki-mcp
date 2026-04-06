@@ -38,7 +38,9 @@ def _validate_grid_cells(cells: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 f"cells[{index}] must include exactly one of column_id or column_slug."
             )
         if has_column_id and isinstance(cell["column_id"], str):
-            _require_non_empty_text(cell["column_id"], field_name=f"cells[{index}].column_id")
+            _require_non_empty_text(
+                cell["column_id"], field_name=f"cells[{index}].column_id"
+            )
         if has_column_slug and isinstance(cell["column_slug"], str):
             _require_non_empty_text(
                 cell["column_slug"], field_name=f"cells[{index}].column_slug"
@@ -63,7 +65,9 @@ def _validate_grid_columns(columns: list[dict[str, Any]]) -> list[dict[str, Any]
         if "required" not in column:
             raise ValueError(f"columns[{index}] must include required.")
         if isinstance(column["title"], str):
-            _require_non_empty_text(column["title"], field_name=f"columns[{index}].title")
+            _require_non_empty_text(
+                column["title"], field_name=f"columns[{index}].title"
+            )
         if isinstance(column["slug"], str):
             _require_non_empty_text(column["slug"], field_name=f"columns[{index}].slug")
         if isinstance(column["type"], str):
@@ -184,9 +188,7 @@ def register_page_write_tools(mcp: FastMCP[Any]) -> None:
         ] = None,
     ) -> Any:
         normalized_grid_id = _require_non_empty_text(grid_id, field_name="grid_id")
-        normalized_revision = _require_non_empty_text(
-            revision, field_name="revision"
-        )
+        normalized_revision = _require_non_empty_text(revision, field_name="revision")
         normalized_title = (
             _require_non_empty_text(title, field_name="title")
             if title is not None
@@ -242,9 +244,7 @@ def register_page_write_tools(mcp: FastMCP[Any]) -> None:
         ] = None,
     ) -> Any:
         normalized_grid_id = _require_non_empty_text(grid_id, field_name="grid_id")
-        normalized_revision = _require_non_empty_text(
-            revision, field_name="revision"
-        )
+        normalized_revision = _require_non_empty_text(revision, field_name="revision")
         if not rows:
             raise ValueError("rows must not be empty.")
         if position is not None and after_row_id is not None:
@@ -365,9 +365,7 @@ def register_page_write_tools(mcp: FastMCP[Any]) -> None:
         ],
     ) -> Any:
         normalized_grid_id = _require_non_empty_text(grid_id, field_name="grid_id")
-        normalized_revision = _require_non_empty_text(
-            revision, field_name="revision"
-        )
+        normalized_revision = _require_non_empty_text(revision, field_name="revision")
         return await ctx.request_context.lifespan_context.wiki.grid_delete_rows(
             normalized_grid_id,
             revision=normalized_revision,
@@ -402,9 +400,7 @@ def register_page_write_tools(mcp: FastMCP[Any]) -> None:
         ] = None,
     ) -> Any:
         normalized_grid_id = _require_non_empty_text(grid_id, field_name="grid_id")
-        normalized_revision = _require_non_empty_text(
-            revision, field_name="revision"
-        )
+        normalized_revision = _require_non_empty_text(revision, field_name="revision")
 
         return await ctx.request_context.lifespan_context.wiki.grid_add_columns(
             normalized_grid_id,
@@ -431,9 +427,7 @@ def register_page_write_tools(mcp: FastMCP[Any]) -> None:
         ],
     ) -> Any:
         normalized_grid_id = _require_non_empty_text(grid_id, field_name="grid_id")
-        normalized_revision = _require_non_empty_text(
-            revision, field_name="revision"
-        )
+        normalized_revision = _require_non_empty_text(revision, field_name="revision")
         return await ctx.request_context.lifespan_context.wiki.grid_delete_columns(
             normalized_grid_id,
             revision=normalized_revision,
@@ -470,9 +464,7 @@ def register_page_write_tools(mcp: FastMCP[Any]) -> None:
         ] = None,
     ) -> Any:
         normalized_grid_id = _require_non_empty_text(grid_id, field_name="grid_id")
-        normalized_revision = _require_non_empty_text(
-            revision, field_name="revision"
-        )
+        normalized_revision = _require_non_empty_text(revision, field_name="revision")
         normalized_row_id = _require_non_empty_text(str(row_id), field_name="row_id")
         if position is None and after_row_id is None:
             raise ValueError("Provide either position or after_row_id.")
@@ -513,9 +505,7 @@ def register_page_write_tools(mcp: FastMCP[Any]) -> None:
         ],
     ) -> Any:
         normalized_grid_id = _require_non_empty_text(grid_id, field_name="grid_id")
-        normalized_revision = _require_non_empty_text(
-            revision, field_name="revision"
-        )
+        normalized_revision = _require_non_empty_text(revision, field_name="revision")
         normalized_column_slug = _require_non_empty_text(
             column_slug, field_name="column_slug"
         )
