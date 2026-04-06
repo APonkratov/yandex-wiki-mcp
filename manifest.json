@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "ya-yandex-wiki-mcp",
   "display_name": "Yet Another Yandex Wiki MCP",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Yet Another Yandex Wiki MCP Server",
   "author": {
     "name": "Aleksandr Ponkratov",

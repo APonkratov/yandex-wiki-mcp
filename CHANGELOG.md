@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.1.2] - 2026-04-06
+
+### Changed
+- Run the test workflow on pull requests and only on pushes to `main` and `master`
+- Run the release workflow only on version tags and manual dispatches
+- Clarified MCP parameter descriptions for list-valued `fields` and `resource_types`
+
+### Fixed
+- Added a fallback for `page_append_content(anchor=...)` that updates page source when the Wiki API returns `ANCHOR_NOT_FOUND` for explicit source anchors
+- Surfaced structured `WikiApiError` details from Wiki API 400 responses
+- Fixed formatting in `tests/mcp/tools/test_page_read_tools.py`
+
 ## [0.1.1] - 2026-04-06
 
 ### Changed
