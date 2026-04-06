@@ -2,6 +2,29 @@ class WikiError(Exception):
     """Base class for Wiki API errors."""
 
 
+class WikiApiError(WikiError):
+    def __init__(
+        self,
+        *,
+        status: int,
+        error_code: str | None = None,
+        debug_message: str | None = None,
+        message: str | None = None,
+    ):
+        parts = [f"Wiki API request failed with status {status}"]
+        if error_code:
+            parts.append(f"error_code={error_code}")
+        if debug_message:
+            parts.append(f"debug_message={debug_message}")
+        elif message:
+            parts.append(f"message={message}")
+        super().__init__(", ".join(parts))
+        self.status = status
+        self.error_code = error_code
+        self.debug_message = debug_message
+        self.message = message
+
+
 class PageNotFound(WikiError):
     def __init__(self, page_identifier: int | str):
         super().__init__(f"Wiki page not found: {page_identifier}")
