@@ -16,11 +16,18 @@ from mcp_wiki.wiki.proto.types.pages import (
     CommentsResponse,
     DeletePageResponse,
     DescendantsResponse,
+    GridCreateRequest,
+    GridMutationResponse,
+    GridOperationResponse,
+    GridUpdateResponse,
+    GridUpdateRequest,
+    GridsResponse,
     PageComment,
     RecoverPageResponse,
     ResourcesResponse,
     UploadAttachmentResult,
     UploadSessionResponse,
+    WikiGrid,
     WikiPage,
 )
 
@@ -271,6 +278,272 @@ class WikiClient(WikiProtocol):
                 raise PageNotFound(page_id)
             response.raise_for_status()
             return ResourcesResponse.model_validate_json(await response.read())
+
+    async def page_get_grids(
+        self,
+        page_id: int,
+        *,
+        page_size: int = 50,
+        cursor: str | None = None,
+        order_by: str | None = None,
+        order_direction: str | None = None,
+        auth: YandexAuth | None = None,
+    ) -> GridsResponse:
+        params: dict[str, Any] = {"page_size": page_size}
+        if cursor:
+            params["cursor"] = cursor
+        if order_by:
+            params["order_by"] = order_by
+        if order_direction:
+            params["order_direction"] = order_direction
+
+        async with self._session.get(
+            f"v1/pages/{page_id}/grids",
+            headers=await self._build_headers(auth),
+            params=params,
+        ) as response:
+            if response.status == 404:
+                raise PageNotFound(page_id)
+            response.raise_for_status()
+            return GridsResponse.model_validate_json(await response.read())
+
+    async def grid_get(
+        self,
+        grid_id: str,
+        *,
+        fields: list[str] | None = None,
+        filter: str | None = None,
+        only_cols: str | None = None,
+        only_rows: str | None = None,
+        revision: str | None = None,
+        sort: str | None = None,
+        auth: YandexAuth | None = None,
+    ) -> WikiGrid:
+        params: dict[str, Any] = {}
+        if fields:
+            params["fields"] = ",".join(fields)
+        if filter:
+            params["filter"] = filter
+        if only_cols:
+            params["only_cols"] = only_cols
+        if only_rows:
+            params["only_rows"] = only_rows
+        if revision:
+            params["revision"] = revision
+        if sort:
+            params["sort"] = sort
+
+        async with self._session.get(
+            f"v1/grids/{grid_id}",
+            headers=await self._build_headers(auth),
+            params=params if params else None,
+        ) as response:
+            response.raise_for_status()
+            return WikiGrid.model_validate_json(await response.read())
+
+    async def grid_create(
+        self,
+        *,
+        request: GridCreateRequest,
+        auth: YandexAuth | None = None,
+    ) -> WikiGrid:
+        async with self._session.post(
+            "v1/grids",
+            headers=await self._build_headers(auth),
+            json=request.model_dump(exclude_none=True),
+        ) as response:
+            response.raise_for_status()
+            return WikiGrid.model_validate_json(await response.read())
+
+    async def grid_update(
+        self,
+        grid_id: str,
+        *,
+        request: GridUpdateRequest,
+        auth: YandexAuth | None = None,
+    ) -> GridUpdateResponse:
+        body = request.model_dump(exclude_none=True)
+        if not request.default_sort:
+            body.pop("default_sort", None)
+
+        async with self._session.post(
+            f"v1/grids/{grid_id}",
+            headers=await self._build_headers(auth),
+            json=body,
+        ) as response:
+            response.raise_for_status()
+            return GridUpdateResponse.model_validate_json(await response.read())
+
+    async def grid_add_rows(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        rows: list[dict[str, Any]],
+        position: int | None = None,
+        after_row_id: str | None = None,
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse:
+        body: dict[str, Any] = {
+            "revision": revision,
+            "rows": rows,
+        }
+        if position is not None:
+            body["position"] = position
+        if after_row_id is not None:
+            body["after_row_id"] = after_row_id
+
+        async with self._session.post(
+            f"v1/grids/{grid_id}/rows",
+            headers=await self._build_headers(auth),
+            json=body,
+        ) as response:
+            response.raise_for_status()
+            return GridMutationResponse.model_validate_json(await response.read())
+
+    async def grid_delete(
+        self,
+        grid_id: str,
+        *,
+        auth: YandexAuth | None = None,
+    ) -> dict[str, Any]:
+        async with self._session.delete(
+            f"v1/grids/{grid_id}",
+            headers=await self._build_headers(auth),
+        ) as response:
+            return await self._read_json(response)
+
+    async def grid_copy(
+        self,
+        grid_id: str,
+        *,
+        target: str,
+        title: str | None = None,
+        auth: YandexAuth | None = None,
+    ) -> GridOperationResponse:
+        body: dict[str, Any] = {"target": target}
+        if title is not None:
+            body["title"] = title
+
+        async with self._session.post(
+            f"v1/grids/{grid_id}/clone",
+            headers=await self._build_headers(auth),
+            json=body,
+        ) as response:
+            return GridOperationResponse.model_validate(await self._read_json(response))
+
+    async def grid_update_cells(
+        self,
+        grid_id: str,
+        *,
+        cells: list[dict[str, Any]],
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse:
+        async with self._session.post(
+            f"v1/grids/{grid_id}/cells",
+            headers=await self._build_headers(auth),
+            json={"cells": cells},
+        ) as response:
+            return GridMutationResponse.model_validate(await self._read_json(response))
+
+    async def grid_delete_rows(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        row_ids: list[str],
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse:
+        async with self._session.delete(
+            f"v1/grids/{grid_id}/rows",
+            headers=await self._build_headers(auth),
+            json={"revision": revision, "row_ids": row_ids},
+        ) as response:
+            return GridMutationResponse.model_validate(await self._read_json(response))
+
+    async def grid_add_columns(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        columns: list[dict[str, Any]],
+        position: int | None = None,
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse:
+        body: dict[str, Any] = {
+            "revision": revision,
+            "columns": columns,
+        }
+        if position is not None:
+            body["position"] = position
+
+        async with self._session.post(
+            f"v1/grids/{grid_id}/columns",
+            headers=await self._build_headers(auth),
+            json=body,
+        ) as response:
+            return GridMutationResponse.model_validate(await self._read_json(response))
+
+    async def grid_delete_columns(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        column_slugs: list[str],
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse:
+        async with self._session.delete(
+            f"v1/grids/{grid_id}/columns",
+            headers=await self._build_headers(auth),
+            json={"revision": revision, "column_slugs": column_slugs},
+        ) as response:
+            return GridMutationResponse.model_validate(await self._read_json(response))
+
+    async def grid_move_rows(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        row_id: str,
+        position: int | None = None,
+        after_row_id: str | None = None,
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse:
+        body: dict[str, Any] = {
+            "revision": revision,
+            "row_id": row_id,
+        }
+        if position is not None:
+            body["position"] = position
+        if after_row_id is not None:
+            body["after_row_id"] = after_row_id
+
+        async with self._session.post(
+            f"v1/grids/{grid_id}/rows/move",
+            headers=await self._build_headers(auth),
+            json=body,
+        ) as response:
+            return GridMutationResponse.model_validate(await self._read_json(response))
+
+    async def grid_move_columns(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        column_slug: str,
+        position: int,
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse:
+        async with self._session.post(
+            f"v1/grids/{grid_id}/columns/move",
+            headers=await self._build_headers(auth),
+            json={
+                "revision": revision,
+                "column_slug": column_slug,
+                "position": position,
+            },
+        ) as response:
+            return GridMutationResponse.model_validate(await self._read_json(response))
 
     async def page_get_attachments(
         self,

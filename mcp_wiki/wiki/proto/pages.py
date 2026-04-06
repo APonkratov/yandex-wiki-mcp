@@ -7,11 +7,18 @@ from mcp_wiki.wiki.proto.types.pages import (
     CommentsResponse,
     DeletePageResponse,
     DescendantsResponse,
+    GridCreateRequest,
+    GridMutationResponse,
+    GridOperationResponse,
+    GridUpdateResponse,
+    GridUpdateRequest,
+    GridsResponse,
     PageComment,
     RecoverPageResponse,
     ResourcesResponse,
     UploadAttachmentResult,
     UploadSessionResponse,
+    WikiGrid,
     WikiPage,
 )
 
@@ -67,6 +74,129 @@ class WikiProtocol(Protocol):
         order_direction: str | None = None,
         auth: YandexAuth | None = None,
     ) -> ResourcesResponse: ...
+
+    async def page_get_grids(
+        self,
+        page_id: int,
+        *,
+        page_size: int = 50,
+        cursor: str | None = None,
+        order_by: str | None = None,
+        order_direction: str | None = None,
+        auth: YandexAuth | None = None,
+    ) -> GridsResponse: ...
+
+    async def grid_get(
+        self,
+        grid_id: str,
+        *,
+        fields: list[str] | None = None,
+        filter: str | None = None,
+        only_cols: str | None = None,
+        only_rows: str | None = None,
+        revision: str | None = None,
+        sort: str | None = None,
+        auth: YandexAuth | None = None,
+    ) -> WikiGrid: ...
+
+    async def grid_create(
+        self,
+        *,
+        request: GridCreateRequest,
+        auth: YandexAuth | None = None,
+    ) -> WikiGrid: ...
+
+    async def grid_update(
+        self,
+        grid_id: str,
+        *,
+        request: GridUpdateRequest,
+        auth: YandexAuth | None = None,
+    ) -> GridUpdateResponse: ...
+
+    async def grid_add_rows(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        rows: list[dict[str, Any]],
+        position: int | None = None,
+        after_row_id: str | None = None,
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse: ...
+
+    async def grid_delete(
+        self,
+        grid_id: str,
+        *,
+        auth: YandexAuth | None = None,
+    ) -> dict[str, Any]: ...
+
+    async def grid_copy(
+        self,
+        grid_id: str,
+        *,
+        target: str,
+        title: str | None = None,
+        auth: YandexAuth | None = None,
+    ) -> GridOperationResponse: ...
+
+    async def grid_update_cells(
+        self,
+        grid_id: str,
+        *,
+        cells: list[dict[str, Any]],
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse: ...
+
+    async def grid_delete_rows(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        row_ids: list[str],
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse: ...
+
+    async def grid_add_columns(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        columns: list[dict[str, Any]],
+        position: int | None = None,
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse: ...
+
+    async def grid_delete_columns(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        column_slugs: list[str],
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse: ...
+
+    async def grid_move_rows(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        row_id: str,
+        position: int | None = None,
+        after_row_id: str | None = None,
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse: ...
+
+    async def grid_move_columns(
+        self,
+        grid_id: str,
+        *,
+        revision: str,
+        column_slug: str,
+        position: int,
+        auth: YandexAuth | None = None,
+    ) -> GridMutationResponse: ...
 
     async def page_get_attachments(
         self,

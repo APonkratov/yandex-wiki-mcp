@@ -2,7 +2,11 @@ from typing import Annotated
 
 from pydantic import Field
 
-from mcp_wiki.wiki.proto.types.pages import PageFieldEnum, ResourceTypeEnum
+from mcp_wiki.wiki.proto.types.pages import (
+    GridFieldEnum,
+    PageFieldEnum,
+    ResourceTypeEnum,
+)
 
 PageID = Annotated[int, Field(description="Wiki page numeric ID.", gt=0)]
 CommentID = Annotated[int, Field(description="Wiki comment numeric ID.", gt=0)]
@@ -27,6 +31,20 @@ PageSize = Annotated[
     int,
     Field(description="Page size for cursor-based endpoints.", ge=1, le=100),
 ]
+GridID = Annotated[str, Field(description="Wiki dynamic table ID.")]
+GridRevision = Annotated[
+    str,
+    Field(
+        description=(
+            "Current grid revision for optimistic locking. "
+            "Fetch the grid first and pass its latest revision."
+        )
+    ),
+]
+GridPageSize = Annotated[
+    int,
+    Field(description="Page size for page grid list endpoints.", ge=1, le=50),
+]
 PageFields = Annotated[
     list[PageFieldEnum] | None,
     Field(
@@ -34,6 +52,16 @@ PageFields = Annotated[
             "Additional page fields to fetch. Supported values: "
             "content, attributes, breadcrumbs, redirect. "
             "Pass them as an array, for example ['content', 'breadcrumbs']."
+        )
+    ),
+]
+GridFields = Annotated[
+    list[GridFieldEnum] | None,
+    Field(
+        description=(
+            "Additional grid fields to fetch. Supported values: "
+            "attributes, user_permissions. "
+            "Pass them as an array, for example ['attributes']."
         )
     ),
 ]
@@ -52,6 +80,8 @@ Use these tools to:
 - Read Wiki pages by slug or ID
 - Traverse a page subtree
 - Read comments, resources, and attachments
+- Read page grids and get dynamic tables
+- Create, copy, and update dynamic tables; add and delete grid rows; add grid columns
 - Create, update, append to, delete, and recover pages
 - Add comments and upload attachments from the local filesystem
 

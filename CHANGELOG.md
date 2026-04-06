@@ -2,6 +2,32 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+- Added first-class grid read tools:
+  - `page_get_grids`
+  - `grid_get`
+- Added grid write tools:
+  - `grid_create`
+  - `grid_update`
+  - `grid_delete`
+  - `grid_copy`
+  - `grid_add_rows`
+  - `grid_delete_rows`
+  - `grid_update_cells`
+  - `grid_add_columns`
+  - `grid_delete_columns`
+  - `grid_move_rows`
+  - `grid_move_columns`
+- Added grid protocol models for:
+  - grid summaries and full grid reads
+  - mutation responses
+  - async grid copy operation metadata
+
+### Changed
+- Clarified `WIKI_READ_ONLY` semantics: it disables all non-read MCP tools, not only grid mutations
+
 ## [0.1.2] - 2026-04-06
 
 ### Changed
