@@ -1,0 +1,16 @@
+from typing import Any
+
+from mcp.server import FastMCP
+
+from mcp_wiki.mcp.tools.page_read import register_page_read_tools
+from mcp_wiki.mcp.tools.page_write import register_page_write_tools
+from mcp_wiki.settings import Settings
+
+
+def register_all_tools(settings: Settings, mcp: FastMCP[Any]) -> None:
+    register_page_read_tools(mcp)
+    if not settings.wiki_read_only:
+        register_page_write_tools(mcp)
+
+
+__all__ = ["register_all_tools"]

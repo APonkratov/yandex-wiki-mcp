@@ -1,0 +1,240 @@
+name: Release MCP Server
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  validate-metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Validate package metadata versions
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+          import sys
+          import tomllib
+
+          root = pathlib.Path(".")
+
+          pyproject = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
+          manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+          server = json.loads((root / "server.json").read_text(encoding="utf-8"))
+
+          project_version = pyproject["project"]["version"]
+          manifest_version = manifest["version"]
+          server_version = server["version"]
+          pypi_package_version = server["packages"][0]["version"]
+          oci_identifier = server["packages"][1]["identifier"]
+          expected_oci_suffix = f":{project_version}"
+
+          versions = {
+              "pyproject.toml": project_version,
+              "manifest.json": manifest_version,
+              "server.json": server_version,
+              "server.json[pypi package]": pypi_package_version,
+          }
+
+          unique_versions = set(versions.values())
+          if len(unique_versions) != 1:
+              for source, version in versions.items():
+                  print(f"{source}: {version}")
+              raise SystemExit("Version mismatch across package metadata files.")
+
+          if not oci_identifier.endswith(expected_oci_suffix):
+              raise SystemExit(
+                  f"OCI identifier version mismatch: {oci_identifier} does not end with {expected_oci_suffix}"
+              )
+
+          ref = os.environ.get("GITHUB_REF", "")
+          if ref.startswith("refs/tags/v"):
+              tag_version = ref.removeprefix("refs/tags/v")
+              if tag_version != project_version:
+                  raise SystemExit(
+                      f"Git tag version {tag_version} does not match package version {project_version}"
+                  )
+
+          print(f"Validated package version: {project_version}")
+          PY
+
+  build-python:
+    needs: validate-metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install build dependencies
+        run: uv sync --dev
+
+      - name: Build package
+        run: uv build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+          retention-days: 7
+
+  build-mcpb:
+    needs: validate-metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Prepare NodeJS
+        uses: actions/setup-node@v6
+
+      - name: Install mcpb CLI
+        run: |
+          npm install -g @anthropic-ai/mcpb
+
+      - name: Create mcpb package
+        run: |
+          mcpb validate manifest.json
+          mcpb pack . ya-yandex-wiki-mcp-${{ github.ref_name }}.mcpb
+
+      - name: Upload mcpb artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcpb
+          path: "*.mcpb"
+          retention-days: 7
+
+  build-docker:
+    needs: validate-metadata
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/ya-yandex-wiki-mcp
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=pep440,pattern={{version}}
+            type=pep440,pattern={{major}}.{{minor}}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  publish:
+    needs:
+      - build-python
+      - build-mcpb
+      - build-docker
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: pypi
+      url: https://pypi.org/p/ya-yandex-wiki-mcp
+    permissions:
+      id-token: write  # Required for trusted publishing
+      contents: write  # Required for releases
+
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        print-hash: true
+        verbose: true
+        skip-existing: true
+
+    - name: Download mcpb artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: "mcpb*"
+        path: mcpb/
+        merge-multiple: true
+
+    - name: Make Github release
+      uses: marvinpinto/action-automatic-releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        title: ${{ github.ref_name }}
+        files: |
+          dist/*
+          mcpb/*
+
+    - name: Checkout code for server.json
+      uses: actions/checkout@v5
+
+    - name: Install mcp-publisher
+      run: |
+        curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+    - name: Authenticate to MCP Registry
+      run: ./mcp-publisher login github-oidc
+
+    # Optional:
+    # - name: Set version in server.json
+    #   run: |
+    #     VERSION=${GITHUB_REF#refs/tags/v}
+    #     jq --arg v "$VERSION" '.version = $v' server.json > server.tmp && mv server.tmp server.json
+
+    - name: Publish server to MCP Registry
+      run: ./mcp-publisher publish

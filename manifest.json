@@ -1,0 +1,124 @@
+{
+  "manifest_version": "0.4",
+  "name": "ya-yandex-wiki-mcp",
+  "display_name": "Yandex Wiki MCP",
+  "version": "0.1.0",
+  "description": "Yandex Wiki MCP Server",
+  "author": {
+    "name": "Aleksandr Ponkratov",
+    "email": "aleks.ponkratov@gmail.com"
+  },
+  "server": {
+    "type": "uv",
+    "entry_point": "ya-yandex-wiki-mcp",
+    "mcp_config": {
+      "command": "uv",
+      "args": [
+        "run",
+        "ya-yandex-wiki-mcp"
+      ],
+      "env": {
+        "PYTHONPATH": "${__dirname}",
+        "WIKI_TOKEN": "${user_config.wiki_token}",
+        "WIKI_IAM_TOKEN": "${user_config.wiki_iam_token}",
+        "WIKI_CLOUD_ORG_ID": "${user_config.wiki_cloud_org_id}",
+        "WIKI_ORG_ID": "${user_config.wiki_org_id}"
+      }
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "linux", "win32"],
+    "runtimes": {
+      "python": ">=3.11"
+    }
+  },
+  "tools": [
+    {
+      "name": "page_get",
+      "description": "Get a Yandex Wiki page by page_id or slug"
+    },
+    {
+      "name": "page_get_descendants",
+      "description": "Get a subtree of Yandex Wiki pages"
+    },
+    {
+      "name": "page_get_comments",
+      "description": "Get comments for a Yandex Wiki page"
+    },
+    {
+      "name": "page_get_resources",
+      "description": "Get resources linked to a Yandex Wiki page"
+    },
+    {
+      "name": "page_get_attachments",
+      "description": "Get attachments for a Yandex Wiki page"
+    },
+    {
+      "name": "page_create",
+      "description": "Create a Yandex Wiki page"
+    },
+    {
+      "name": "page_update",
+      "description": "Update an existing Yandex Wiki page"
+    },
+    {
+      "name": "page_append_content",
+      "description": "Append content to a Yandex Wiki page"
+    },
+    {
+      "name": "page_add_comment",
+      "description": "Add a comment to a Yandex Wiki page"
+    },
+    {
+      "name": "page_delete",
+      "description": "Delete a Yandex Wiki page and return a recovery token"
+    },
+    {
+      "name": "page_recover",
+      "description": "Recover a deleted Yandex Wiki page"
+    },
+    {
+      "name": "page_upload_attachment",
+      "description": "Upload a local file and attach it to a Yandex Wiki page"
+    }
+  ],
+  "user_config": {
+    "wiki_token": {
+      "type": "string",
+      "title": "Yandex Wiki Token",
+      "description": "OAuth token for accessing the Yandex Wiki API",
+      "required": false,
+      "sensitive": true,
+      "default": ""
+    },
+    "wiki_iam_token": {
+      "type": "string",
+      "title": "Yandex IAM Token",
+      "description": "IAM token for service-to-service access to Yandex Wiki",
+      "required": false,
+      "sensitive": true,
+      "default": ""
+    },
+    "wiki_cloud_org_id": {
+      "type": "string",
+      "title": "Wiki Cloud Org Id",
+      "description": "ID of Yandex Cloud organization linked to Wiki",
+      "required": false,
+      "sensitive": false,
+      "default": ""
+    },
+    "wiki_org_id": {
+      "type": "string",
+      "title": "Wiki Org Id",
+      "description": "ID of Yandex 360 organization for Wiki access",
+      "required": false,
+      "sensitive": false,
+      "default": ""
+    }
+  },
+  "keywords": [
+    "yandex",
+    "yandex-wiki"
+  ],
+  "license": "Apache 2.0"
+}

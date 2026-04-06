@@ -1,0 +1,59 @@
+from typing import Annotated
+
+from pydantic import Field
+
+from mcp_wiki.wiki.proto.types.pages import PageFieldEnum, ResourceTypeEnum
+
+PageID = Annotated[int, Field(description="Wiki page numeric ID.", gt=0)]
+CommentID = Annotated[int, Field(description="Wiki comment numeric ID.", gt=0)]
+PageSlug = Annotated[
+    str,
+    Field(
+        description=(
+            "Wiki page slug like 'users/login/project/page'. "
+            "A full Wiki page URL is also accepted."
+        )
+    ),
+]
+RecoveryToken = Annotated[
+    str,
+    Field(description="Recovery token returned by the page_delete tool."),
+]
+Cursor = Annotated[
+    str | None,
+    Field(description="Opaque pagination cursor returned by the previous call."),
+]
+PageSize = Annotated[
+    int,
+    Field(description="Page size for cursor-based endpoints.", ge=1, le=100),
+]
+PageFields = Annotated[
+    list[PageFieldEnum] | None,
+    Field(
+        description=(
+            "Additional page fields to fetch. Supported values: "
+            "content, attributes, breadcrumbs, redirect."
+        )
+    ),
+]
+ResourceTypes = Annotated[
+    list[ResourceTypeEnum] | None,
+    Field(
+        description=(
+            "Optional resource types filter. Returns resources that match any of the selected types."
+        )
+    ),
+]
+
+instructions = """Tools for interacting with Yandex Wiki.
+Use these tools to:
+- Read Wiki pages by slug or ID
+- Traverse a page subtree
+- Read comments, resources, and attachments
+- Create, update, append to, delete, and recover pages
+- Add comments and upload attachments from the local filesystem
+
+In russian Yandex Wiki is called "Яндекс Вики" or "Вики".
+If a tool accepts `page_id` and `slug`, provide exactly one of them.
+If a tool returns `next_cursor`, continue calling the same tool with that cursor until it becomes empty when you need the full result set.
+"""
