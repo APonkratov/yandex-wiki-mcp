@@ -1,9 +1,9 @@
 {
   "manifest_version": "0.4",
   "name": "ya-yandex-wiki-mcp",
-  "display_name": "Yandex Wiki MCP",
+  "display_name": "Yet Another Yandex Wiki MCP",
   "version": "0.1.0",
-  "description": "Yandex Wiki MCP Server",
+  "description": "Yet Another Yandex Wiki MCP Server",
   "author": {
     "name": "Aleksandr Ponkratov",
     "email": "aleks.ponkratov@gmail.com"

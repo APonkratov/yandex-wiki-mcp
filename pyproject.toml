@@ -1,7 +1,7 @@
 [project]
 name = "ya-yandex-wiki-mcp"
 version = "0.1.0"
-description = "Yandex Wiki MCP Server"
+description = "Yet Another Yandex Wiki MCP Server"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [

@@ -1,6 +1,8 @@
-# Yandex Wiki MCP Server
+# Yet Another Yandex Wiki MCP Server
 
-MCP server for Yandex Wiki API with a structure similar to `yandex-tracker-mcp`, but focused on Wiki pages, comments, resources, attachments, and recovery workflows.
+`mcp-name: io.github.APonkratov/ya-yandex-wiki-mcp`
+
+Yet another MCP server for the Yandex Wiki API, focused on Wiki pages, comments, resources, attachments, and recovery workflows.
 
 ## Supported tools
 

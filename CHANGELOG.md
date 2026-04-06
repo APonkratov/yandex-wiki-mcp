@@ -6,7 +6,7 @@ All notable changes to this project are documented in this file.
 
 ### Added
 - Initial release of `ya-yandex-wiki-mcp`
-- FastMCP server for Yandex Wiki API with `stdio`, `sse`, and `streamable-http` transports
+- Yet Another Yandex Wiki MCP Server with `stdio`, `sse`, and `streamable-http` transports
 - Wiki HTTP client with support for:
   - page read by `page_id` or `slug`
   - subtree traversal via descendants endpoint

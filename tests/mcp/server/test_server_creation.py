@@ -72,7 +72,7 @@ class TestServerConfiguration:
         client_session: ClientSession,
     ) -> None:
         result = await client_session.initialize()
-        assert result.serverInfo.name == "Yandex Wiki MCP Server"
+        assert result.serverInfo.name == "Yet Another Yandex Wiki MCP Server"
 
     async def test_server_has_instructions(
         self,

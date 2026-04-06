@@ -9,7 +9,7 @@ from mcp_wiki.settings import Settings
 
 
 def create_mcp() -> tuple[FastMCP[Any], Settings]:
-    """Main entry point for the ya-yandex-wiki-mcp command."""
+    """Main entry point for the Yet Another Yandex Wiki MCP Server command."""
     try:
         settings = Settings()
     except ValidationError as exc:

@@ -4,7 +4,7 @@ This file provides guidance for working on the `ya-yandex-wiki-mcp` package.
 
 ## Project Overview
 
-`ya-yandex-wiki-mcp` is a Model Context Protocol server for the public Yandex Wiki API.
+`ya-yandex-wiki-mcp` is Yet Another Yandex Wiki MCP Server for the public Yandex Wiki API.
 It exposes Wiki-oriented tools through FastMCP and keeps the code organized around a dedicated Wiki domain model.
 
 Main capabilities:

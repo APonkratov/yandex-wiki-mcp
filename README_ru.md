@@ -1,6 +1,6 @@
-# Yandex Wiki MCP Server
+# Yet Another Yandex Wiki MCP Server
 
-MCP сервер для публичного API Yandex Wiki. Структура проекта повторяет подход `yandex-tracker-mcp`: отдельные `settings`, HTTP-клиент, MCP resources/tools, optional OAuth provider и тесты.
+Yet another MCP сервер для публичного API Yandex Wiki. Структура проекта повторяет подход `yandex-tracker-mcp`: отдельные `settings`, HTTP-клиент, MCP resources/tools, optional OAuth provider и тесты.
 
 ## Реализованные инструменты
 
