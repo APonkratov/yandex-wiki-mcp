@@ -118,9 +118,13 @@ class TestPageReadTools:
             "resource_types"
         ] == ["attachment"]
         assert mock_wiki_protocol.page_get_resources.await_args.kwargs["q"] is None
-        assert mock_wiki_protocol.page_get_resources.await_args.kwargs["page_size"] == 50
+        assert (
+            mock_wiki_protocol.page_get_resources.await_args.kwargs["page_size"] == 50
+        )
         assert mock_wiki_protocol.page_get_resources.await_args.kwargs["cursor"] is None
-        assert mock_wiki_protocol.page_get_resources.await_args.kwargs["order_by"] is None
+        assert (
+            mock_wiki_protocol.page_get_resources.await_args.kwargs["order_by"] is None
+        )
         assert (
             mock_wiki_protocol.page_get_resources.await_args.kwargs["order_direction"]
             is None
