@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-06
+
 ### Added
 - Added first-class grid read tools:
   - `page_get_grids`
@@ -24,9 +26,16 @@ All notable changes to this project are documented in this file.
   - grid summaries and full grid reads
   - mutation responses
   - async grid copy operation metadata
+- Added `CONTRIBUTING.md` with the required full local verification checklist before commit and merge request updates
 
 ### Changed
 - Clarified `WIKI_READ_ONLY` semantics: it disables all non-read MCP tools, not only grid mutations
+- Aligned `grid_update.default_sort` with the real Yandex Wiki API contract: the request now uses a list of single-entry `{column_slug: "asc"|"desc"}` mappings
+- Exposed `WIKI_READ_ONLY` in `manifest.json` user config and runtime environment mapping
+
+### Fixed
+- Relaxed `grid_update` response parsing to accept revision-only bodies returned by the real API
+- Fixed typing and formatting issues uncovered by the full CI-equivalent local verification set
 
 ## [0.1.2] - 2026-04-06
 
