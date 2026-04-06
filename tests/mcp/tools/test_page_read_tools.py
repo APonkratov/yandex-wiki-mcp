@@ -47,6 +47,31 @@ class TestPageReadTools:
         )
         mock_wiki_protocol.page_get_descendants.assert_awaited_once()
 
+    async def test_page_get_with_fields(
+        self,
+        client_session: ClientSession,
+        mock_wiki_protocol: AsyncMock,
+    ) -> None:
+        mock_wiki_protocol.page_get.return_value = WikiPage.model_construct(
+            id=10,
+            slug="users/test/page",
+            content="Page content",
+        )
+
+        result = await client_session.call_tool(
+            "page_get",
+            {"page_id": 10, "fields": ["content", "breadcrumbs"]},
+        )
+
+        assert get_tool_result_content(result)["content"] == "Page content"
+        mock_wiki_protocol.page_get.assert_awaited_once()
+        assert mock_wiki_protocol.page_get.await_args.args == (10,)
+        assert mock_wiki_protocol.page_get.await_args.kwargs["fields"] == [
+            "content",
+            "breadcrumbs",
+        ]
+        assert "auth" in mock_wiki_protocol.page_get.await_args.kwargs
+
     async def test_page_get_resources(
         self,
         client_session: ClientSession,
@@ -69,3 +94,39 @@ class TestPageReadTools:
         assert get_tool_result_content(result)["results"][0]["type"] == "attachment"
         mock_wiki_protocol.page_get_by_slug.assert_awaited_once()
         mock_wiki_protocol.page_get_resources.assert_awaited_once()
+
+    async def test_page_get_resources_with_attachment_filter(
+        self,
+        client_session: ClientSession,
+        mock_wiki_protocol: AsyncMock,
+    ) -> None:
+        mock_wiki_protocol.page_get_resources.return_value = {
+            "results": [{"type": "attachment", "item": {"name": "file.zip"}}],
+            "next_cursor": None,
+            "prev_cursor": None,
+        }
+
+        result = await client_session.call_tool(
+            "page_get_resources",
+            {"page_id": 10, "resource_types": ["attachment"]},
+        )
+
+        assert get_tool_result_content(result)["results"][0]["type"] == "attachment"
+        mock_wiki_protocol.page_get_resources.assert_awaited_once()
+        assert mock_wiki_protocol.page_get_resources.await_args.args == (10,)
+        assert mock_wiki_protocol.page_get_resources.await_args.kwargs[
+            "resource_types"
+        ] == ["attachment"]
+        assert mock_wiki_protocol.page_get_resources.await_args.kwargs["q"] is None
+        assert (
+            mock_wiki_protocol.page_get_resources.await_args.kwargs["page_size"] == 50
+        )
+        assert mock_wiki_protocol.page_get_resources.await_args.kwargs["cursor"] is None
+        assert (
+            mock_wiki_protocol.page_get_resources.await_args.kwargs["order_by"] is None
+        )
+        assert (
+            mock_wiki_protocol.page_get_resources.await_args.kwargs["order_direction"]
+            is None
+        )
+        assert "auth" in mock_wiki_protocol.page_get_resources.await_args.kwargs

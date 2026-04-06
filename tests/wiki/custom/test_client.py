@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 from aioresponses import aioresponses
 
 from mcp_wiki.wiki.custom.client import WikiClient
+from mcp_wiki.wiki.custom.errors import WikiApiError
 from tests.aioresponses_utils import RequestCapture
 
 
@@ -95,3 +96,120 @@ class TestWikiClient:
         upload_part_capture.assert_called_once()
         finish_capture.assert_called_once()
         attach_capture.assert_called_once()
+
+    async def test_page_append_content_with_anchor(
+        self,
+        wiki_client: WikiClient,
+    ) -> None:
+        capture = RequestCapture(payload={"id": 10, "slug": "users/test/page"})
+
+        with aioresponses() as mocked:
+            mocked.post(
+                "https://api.wiki.yandex.net/v1/pages/10/append-content",
+                callback=capture.callback,
+            )
+            await wiki_client.page_append_content(
+                10,
+                content="Anchored block",
+                anchor="#release-notes",
+            )
+
+        capture.assert_called_once()
+        capture.last_request.assert_json_body(
+            {
+                "content": "Anchored block",
+                "anchor": {"name": "#release-notes"},
+            }
+        )
+
+    async def test_page_append_content_anchor_not_found_raises_wiki_api_error(
+        self,
+        wiki_client: WikiClient,
+    ) -> None:
+        append_capture = RequestCapture(
+            status=400,
+            body=(
+                '{"error_code":"ANCHOR_NOT_FOUND","debug_message":"Anchor not found","message":null}'
+            ),
+        )
+        get_capture = RequestCapture(
+            payload={
+                "id": 10,
+                "slug": "users/test/page",
+                "content": "# Root\n\nNo explicit anchors here.\n\nBody",
+            }
+        )
+
+        with aioresponses() as mocked:
+            mocked.post(
+                "https://api.wiki.yandex.net/v1/pages/10/append-content",
+                callback=append_capture.callback,
+            )
+            mocked.get(
+                re.compile(r"https://api\.wiki\.yandex\.net/v1/pages/10.*"),
+                callback=get_capture.callback,
+            )
+            try:
+                await wiki_client.page_append_content(
+                    10,
+                    content="Anchored block",
+                    anchor="#release-notes",
+                )
+            except WikiApiError as exc:
+                assert exc.status == 400
+                assert exc.error_code == "ANCHOR_NOT_FOUND"
+                assert exc.debug_message == "Anchor not found"
+            else:  # pragma: no cover
+                raise AssertionError("Expected WikiApiError to be raised")
+        append_capture.assert_called_once()
+        get_capture.assert_called_once()
+
+    async def test_page_append_content_falls_back_to_source_anchor_replace(
+        self,
+        wiki_client: WikiClient,
+    ) -> None:
+        append_capture = RequestCapture(
+            status=400,
+            body=(
+                '{"error_code":"ANCHOR_NOT_FOUND","debug_message":"Anchor not found","message":null}'
+            ),
+        )
+        get_capture = RequestCapture(
+            payload={
+                "id": 10,
+                "slug": "users/test/page",
+                "content": "# Root\n\n## Section {#release-notes}\n\nBody",
+            }
+        )
+        update_capture = RequestCapture(
+            payload={"id": 10, "slug": "users/test/page", "title": "Updated"}
+        )
+
+        with aioresponses() as mocked:
+            mocked.post(
+                "https://api.wiki.yandex.net/v1/pages/10/append-content",
+                callback=append_capture.callback,
+            )
+            mocked.get(
+                re.compile(r"https://api\.wiki\.yandex\.net/v1/pages/10.*"),
+                callback=get_capture.callback,
+            )
+            mocked.post(
+                re.compile(r"https://api\.wiki\.yandex\.net/v1/pages/10.*"),
+                callback=update_capture.callback,
+            )
+            result = await wiki_client.page_append_content(
+                10,
+                content="\n\nAppended under anchor.",
+                anchor="#release-notes",
+            )
+
+        assert result["id"] == 10
+        append_capture.assert_called_once()
+        get_capture.assert_called_once()
+        update_capture.assert_called_once()
+        update_capture.last_request.assert_json_field(
+            "content",
+            "# Root\n\n## Section {#release-notes}\n\nAppended under anchor.\n\nBody",
+        )
+        update_capture.last_request.assert_param("allow_merge", "true")

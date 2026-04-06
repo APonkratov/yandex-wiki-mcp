@@ -32,7 +32,8 @@ PageFields = Annotated[
     Field(
         description=(
             "Additional page fields to fetch. Supported values: "
-            "content, attributes, breadcrumbs, redirect."
+            "content, attributes, breadcrumbs, redirect. "
+            "Pass them as an array, for example ['content', 'breadcrumbs']."
         )
     ),
 ]
@@ -40,7 +41,8 @@ ResourceTypes = Annotated[
     list[ResourceTypeEnum] | None,
     Field(
         description=(
-            "Optional resource types filter. Returns resources that match any of the selected types."
+            "Optional resource types filter. Supported values: "
+            "attachment, grid. Pass them as an array, for example ['attachment']."
         )
     ),
 ]

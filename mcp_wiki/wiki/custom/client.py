@@ -1,11 +1,13 @@
+import contextlib
 import json
+import re
 from pathlib import Path
 from typing import Any, Literal
 
 from aiohttp import ClientSession, ClientTimeout
 
 from mcp_wiki.mcp.utils import normalize_slug
-from mcp_wiki.wiki.custom.errors import PageNotFound
+from mcp_wiki.wiki.custom.errors import PageNotFound, WikiApiError
 from mcp_wiki.wiki.proto.common import YandexAuth
 from mcp_wiki.wiki.proto.pages import WikiProtocol
 from mcp_wiki.wiki.proto.types.pages import (
@@ -90,6 +92,62 @@ class WikiClient(WikiProtocol):
         if not payload:
             return {}
         return json.loads(payload)
+
+    async def _raise_api_error(self, response: Any) -> None:
+        payload = await response.read()
+        details: dict[str, Any] | None = None
+        if payload:
+            with contextlib.suppress(json.JSONDecodeError):
+                details = json.loads(payload)
+        raise WikiApiError(
+            status=response.status,
+            error_code=details.get("error_code") if details else None,
+            debug_message=details.get("debug_message") if details else None,
+            message=details.get("message") if details else None,
+        )
+
+    def _append_content_to_anchor_source(
+        self,
+        page_content: str,
+        *,
+        appended_content: str,
+        anchor: str,
+    ) -> str | None:
+        anchor_id = anchor.lstrip("#")
+        escaped_anchor_id = re.escape(anchor_id)
+        patterns = [
+            re.compile(rf"(?m)^.*\{{#{escaped_anchor_id}\}}[ \t]*$"),
+            re.compile(
+                rf'(?m)^.*#\[[^\]]*\]\({escaped_anchor_id}(?:\s+"[^"]*")?\)[ \t]*$'
+            ),
+            re.compile(
+                rf'(?m)^.*\{{\{{(?:anchor|a)\s+href="{escaped_anchor_id}"[^}}]*\}}\}}[ \t]*$'
+            ),
+        ]
+        for pattern in patterns:
+            match = pattern.search(page_content)
+            if match is None:
+                continue
+            anchor_end = match.end()
+            insertion_point = anchor_end
+            while insertion_point < len(page_content) and page_content[
+                insertion_point
+            ] in ("\r", "\n"):
+                insertion_point += 1
+            separator = page_content[anchor_end:insertion_point]
+            suffix = page_content[insertion_point:]
+            if separator:
+                normalized_content = appended_content.strip("\r\n")
+                trailing_separator = separator if suffix else ""
+                return (
+                    f"{page_content[:anchor_end]}{separator}{normalized_content}"
+                    f"{trailing_separator}{suffix}"
+                )
+            return (
+                f"{page_content[:anchor_end]}{appended_content}"
+                f"{page_content[insertion_point:]}"
+            )
+        return None
 
     async def page_get_by_slug(
         self,
@@ -317,6 +375,42 @@ class WikiClient(WikiProtocol):
         ) as response:
             if response.status == 404:
                 raise PageNotFound(page_id)
+            if response.status == 400:
+                payload = await response.read()
+                details: dict[str, Any] | None = None
+                if payload:
+                    with contextlib.suppress(json.JSONDecodeError):
+                        details = json.loads(payload)
+                if (
+                    anchor
+                    and details
+                    and details.get("error_code") == "ANCHOR_NOT_FOUND"
+                ):
+                    page = await self.page_get(
+                        page_id,
+                        fields=["content"],
+                        auth=auth,
+                    )
+                    if isinstance(page.content, str):
+                        updated_content = self._append_content_to_anchor_source(
+                            page.content,
+                            appended_content=content,
+                            anchor=anchor,
+                        )
+                        if updated_content is not None:
+                            updated_page = await self.page_update(
+                                page_id,
+                                content=updated_content,
+                                allow_merge=True,
+                                auth=auth,
+                            )
+                            return json.loads(updated_page.model_dump_json())
+                raise WikiApiError(
+                    status=response.status,
+                    error_code=details.get("error_code") if details else None,
+                    debug_message=details.get("debug_message") if details else None,
+                    message=details.get("message") if details else None,
+                )
             return await self._read_json(response)
 
     async def page_add_comment(
