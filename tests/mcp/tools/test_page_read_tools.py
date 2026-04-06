@@ -2,8 +2,8 @@ from unittest.mock import AsyncMock
 
 from mcp.client.session import ClientSession
 
-from mcp_wiki.wiki.proto.types.pages import WikiGrid, WikiPage
-from tests.mcp.conftest import get_tool_result_content
+from mcp_wiki.wiki.proto.types.pages import WikiGrid, WikiGridRow, WikiPage
+from tests.mcp.conftest import get_tool_result_content, get_tool_result_text
 
 
 class TestPageReadTools:
@@ -173,7 +173,7 @@ class TestPageReadTools:
             id="grid-1",
             title="Roadmap",
             revision="7",
-            rows=[{"id": "row-1", "row": ["In progress", 3]}],
+            rows=[WikiGridRow.model_construct(id="row-1", row=["In progress", 3])],
         )
 
         result = await client_session.call_tool(
@@ -216,5 +216,4 @@ class TestPageReadTools:
         result = await client_session.call_tool("grid_get", {"grid_id": "   "})
 
         assert result.isError is True
-        assert result.content
-        assert "grid_id must not be empty" in result.content[0].text
+        assert "grid_id must not be empty" in get_tool_result_text(result)

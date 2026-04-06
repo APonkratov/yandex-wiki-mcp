@@ -6,7 +6,11 @@ from aioresponses import aioresponses
 
 from mcp_wiki.wiki.custom.client import WikiClient
 from mcp_wiki.wiki.custom.errors import WikiApiError
-from mcp_wiki.wiki.proto.types.pages import GridCreateRequest, GridUpdateRequest
+from mcp_wiki.wiki.proto.types.pages import (
+    GridCreateRequest,
+    GridUpdateRequest,
+    WikiGridPageRef,
+)
 from tests.aioresponses_utils import RequestCapture
 
 
@@ -143,7 +147,7 @@ class TestWikiClient:
                 callback=capture.callback,
             )
             grid = await wiki_client.grid_create(
-                request=GridCreateRequest(title="Roadmap", page={"id": 10})
+                request=GridCreateRequest(title="Roadmap", page=WikiGridPageRef(id=10))
             )
 
         assert grid.id == "grid-1"

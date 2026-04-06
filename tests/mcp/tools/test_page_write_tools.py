@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 from mcp.client.session import ClientSession
 
 from mcp_wiki.wiki.proto.types.pages import WikiPage
-from tests.mcp.conftest import get_tool_result_content
+from tests.mcp.conftest import get_tool_result_content, get_tool_result_text
 
 
 class TestPageWriteTools:
@@ -72,12 +72,14 @@ class TestPageWriteTools:
             {
                 "grid_id": "grid-1",
                 "revision": "7",
-                "default_sort": [{"slug": "status", "direction": "asc"}],
+                "default_sort": [{"status": "asc", "priority": "desc"}],
             },
         )
 
         assert result.isError is True
-        assert "exactly one column slug to direction mapping" in result.content[0].text
+        assert "exactly one column slug to direction mapping" in get_tool_result_text(
+            result
+        )
 
     async def test_grid_add_rows(
         self,
@@ -124,7 +126,7 @@ class TestPageWriteTools:
         )
 
         assert result.isError is True
-        assert "either position or after_row_id" in result.content[0].text
+        assert "either position or after_row_id" in get_tool_result_text(result)
 
     async def test_grid_delete(
         self,
@@ -216,7 +218,7 @@ class TestPageWriteTools:
         )
 
         assert result.isError is True
-        assert "exactly one of column_id or column_slug" in result.content[0].text
+        assert "exactly one of column_id or column_slug" in get_tool_result_text(result)
 
     async def test_grid_delete_rows(
         self,
@@ -255,7 +257,7 @@ class TestPageWriteTools:
         )
 
         assert result.isError is True
-        assert "row_ids must not be empty" in result.content[0].text
+        assert "row_ids must not be empty" in get_tool_result_text(result)
 
     async def test_grid_add_columns(
         self,
@@ -309,7 +311,7 @@ class TestPageWriteTools:
         )
 
         assert result.isError is True
-        assert "columns must not be empty" in result.content[0].text
+        assert "columns must not be empty" in get_tool_result_text(result)
 
     async def test_grid_delete_columns(
         self,
@@ -372,7 +374,7 @@ class TestPageWriteTools:
         )
 
         assert result.isError is True
-        assert "either position or after_row_id" in result.content[0].text
+        assert "either position or after_row_id" in get_tool_result_text(result)
 
     async def test_grid_move_columns(
         self,

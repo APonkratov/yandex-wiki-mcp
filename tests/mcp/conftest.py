@@ -46,6 +46,13 @@ def get_tool_result_content(result: CallToolResult) -> Any:
     return json.loads(text)
 
 
+def get_tool_result_text(result: CallToolResult) -> str:
+    assert result.content, "Tool result has no content"
+    text = getattr(result.content[0], "text", None)
+    assert text is not None, "Tool result content item does not expose text"
+    return text
+
+
 def create_test_settings(read_only: bool = False) -> Settings:
     return Settings.model_construct(
         wiki_token="test-token",

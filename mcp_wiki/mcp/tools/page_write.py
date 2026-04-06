@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, TypeAlias
 
 from mcp.server import FastMCP
 from mcp.server.fastmcp import Context
@@ -9,7 +9,13 @@ from mcp_wiki.mcp.context import AppContext
 from mcp_wiki.mcp.params import GridID, GridRevision, PageID, PageSlug, RecoveryToken
 from mcp_wiki.mcp.tools.page_read import _resolve_page_id, _resolve_page_slug
 from mcp_wiki.mcp.utils import get_yandex_auth
-from mcp_wiki.wiki.proto.types.pages import GridCreateRequest, GridUpdateRequest
+from mcp_wiki.wiki.proto.types.pages import (
+    GridCreateRequest,
+    GridUpdateRequest,
+    WikiGridPageRef,
+)
+
+GridSortMapping: TypeAlias = dict[str, Literal["asc", "desc"]]
 
 
 def _require_non_empty_text(value: str, *, field_name: str) -> str:
@@ -102,12 +108,12 @@ def _validate_column_slugs(column_slugs: list[str]) -> list[str]:
 
 
 def _validate_default_sort(
-    default_sort: list[dict[str, str]],
-) -> list[dict[str, str]]:
+    default_sort: list[GridSortMapping],
+) -> list[GridSortMapping]:
     if not default_sort:
         raise ValueError("default_sort must not be empty.")
 
-    normalized: list[dict[str, str]] = []
+    normalized: list[GridSortMapping] = []
     for index, item in enumerate(default_sort):
         if not isinstance(item, dict):
             raise ValueError(f"default_sort[{index}] must be an object.")
@@ -157,7 +163,7 @@ def register_page_write_tools(mcp: FastMCP[Any]) -> None:
         return await ctx.request_context.lifespan_context.wiki.grid_create(
             request=GridCreateRequest(
                 title=_require_non_empty_text(title, field_name="title"),
-                page={"id": resolved_page_id},
+                page=WikiGridPageRef(id=resolved_page_id),
             ),
             auth=get_yandex_auth(ctx),
         )
@@ -178,7 +184,7 @@ def register_page_write_tools(mcp: FastMCP[Any]) -> None:
             Field(description="New grid title."),
         ] = None,
         default_sort: Annotated[
-            list[dict[str, Any]] | None,
+            list[GridSortMapping] | None,
             Field(
                 description=(
                     "Optional default sort as a list of single-entry mappings from "
