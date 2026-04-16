@@ -82,6 +82,77 @@ uv sync --dev
 uv run ya-yandex-wiki-mcp
 ```
 
+## Docker deployment
+
+Docker-образ требует те же базовые переменные окружения, что и локальный запуск:
+
+- один из `WIKI_TOKEN` или `WIKI_IAM_TOKEN`
+- ровно один из `WIKI_ORG_ID` или `WIKI_CLOUD_ORG_ID`
+- `TRANSPORT=streamable-http` для HTTP deployment
+
+Опционально:
+
+- `HOST=0.0.0.0`
+- `PORT=8000`
+- `WIKI_API_BASE_URL=https://api.wiki.yandex.net`
+- `WIKI_READ_ONLY=true|false`
+
+## Использование готового образа (рекомендуется)
+
+```bash
+# Используя файл окружения
+docker run --env-file .env -p 8000:8000 ghcr.io/aponkratov/ya-yandex-wiki-mcp:latest
+
+# С встроенными переменными окружения
+docker run -e WIKI_TOKEN=ваш_токен \
+           -e WIKI_ORG_ID=ваш_org_id \
+           -e TRANSPORT=streamable-http \
+           -p 8000:8000 \
+           ghcr.io/aponkratov/ya-yandex-wiki-mcp:latest
+```
+
+MCP endpoint будет доступен по адресу `http://localhost:8000/mcp`.
+
+## Сборка образа локально
+
+```bash
+docker build -t ya-yandex-wiki-mcp .
+```
+
+## Docker Compose
+
+**Используя готовый образ:**
+
+```yaml
+version: '3.8'
+services:
+  mcp-wiki:
+    image: ghcr.io/aponkratov/ya-yandex-wiki-mcp:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - WIKI_TOKEN=${WIKI_TOKEN}
+      - WIKI_ORG_ID=${WIKI_ORG_ID}
+      - TRANSPORT=streamable-http
+```
+
+**Сборка локально:**
+
+```yaml
+version: '3.8'
+services:
+  mcp-wiki:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - WIKI_TOKEN=${WIKI_TOKEN}
+      - WIKI_ORG_ID=${WIKI_ORG_ID}
+      - TRANSPORT=streamable-http
+```
+
+Если позже понадобится Redis-backed OAuth storage, текущий [`compose.yaml`](compose.yaml) можно использовать как основу для Redis сервиса.
+
 ## Разработка
 
 Перед коммитом и перед созданием или обновлением merge request нужно прогонять полный локальный набор проверок из [CONTRIBUTING.md](CONTRIBUTING.md).
